@@ -110,3 +110,4 @@ library(DeSeq2)
 
 BiocManager::install("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
 
+BiocManager::install("biomaRt") # au besoin pour la conversion
