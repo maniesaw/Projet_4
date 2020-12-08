@@ -21,6 +21,8 @@ library(deconvSeq)
 BiocManager::install("DeconRNASeq")
 library(DeconRNASeq)
 
+browseVignettes("DeconRNASeq")
+
 ## CellMix
 if( !require(BiocInstaller) ){
    # enable Bioconductor repositories
@@ -35,6 +37,8 @@ source('https://www.bioconductor.org/biocLite.R')
 
 # install (NB: this might ask you to update some of your packages)
 biocLite('CellMix', siteRepos = 'http://web.cbio.uct.ac.za/~renaud/CRAN', type='both')
+
+BiocManager::install("CellMix")
 
 ## MuSic
 devtools::install_github('xuranw/MuSiC')
@@ -79,7 +83,9 @@ devtools::install_github("CompEpigen/DecompPipeline")
 library(DecompPipeline)
 
 ## MeDeCom
-#???
+install.packages("remotes")
+remotes::install_github("lutsik/MeDeCom")
+library("MedeCom")
 
 ##  FactorViz
 devtools::install_github("CompEpigen/FactorViz")
@@ -88,11 +94,19 @@ library(FactorViz)
    # ANY
 
 ## Decoder
-#??
-   
+install.packages("decoder")
+library(decoder)   
+
 # BOTH
 
 ## intNMF
 install.packages("IntNMF")
 library(IntNMF)
+
+
+# Annexe
+BiocManager::install("DESeq2")
+library(DeSeq2)
+
+BiocManager::install("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
 
