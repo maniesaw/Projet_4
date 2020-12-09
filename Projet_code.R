@@ -107,11 +107,24 @@ print(dim(gene_counts_FPKM_carcinoids))
 # Combine both datasets
 gene_counts_FPKM_LNNEN_carcinoids = cbind(gene_counts_FPKM_LNEN, gene_counts_FPKM_carcinoids)
 
+
 ## Methylation arrays
 # For methylation arrays are only available for the LNENs sample. we propose you to work Wwith the the beta values matrix, nevertheless the M values matrix is also available if needed. Both have already been normalised. Finally these matrices exclude the sexual chromosomes.
 BetalValNormLNENs <- read.csv('Data/NormalisedFilteredBetaTable_LnenSamples.csv', header = T, row.names = 1)
 print(head(BetalValNormLNENs))
 print(dim(BetalValNormLNENs ))
+
+
+# Sauvegarde des fichiers
+write.csv2(vstexpr_nosex_meso,"data_vstexpr_nosex_meso.csv")
+write.csv2(gene_counts_FPKM_LNNEN_carcinoids, "data_gene_counts_FPKM_LNNEN_carcinoids.csv")
+
+#####################################################################################################
+
+# Ouvertures des donnees
+vstexpr_nosex_meso = read.csv("data_vstexpr_nosex_meso.csv", row.names = 1, sep=';', header=TRUE)
+gene_counts_FPKM_LNNEN_carcinoids = read.csv("data_gene_counts_FPKM_LNNEN_carcinoids.csv", row.names = 1, sep=';', header=TRUE)
+BetalValNormLNENs <- read.csv('Data/NormalisedFilteredBetaTable_LnenSamples.csv', header = T, row.names = 1)
 
 # Les fichiers à utiliser sont : vstexpr_nosex_meso, gene_counts_FPKM_LNNEN_carcinoids et BetalValNormLNENs pour la méthylation
 
@@ -130,54 +143,56 @@ ensembl_ID_refseq_mrna <- getBM(attributes=c('ensembl_gene_id_version','refseq_m
 
 # Tests des packages
 
-# Music
-library(ggplot2)
-library(MuSiC)
-library(xbioc)
-
-GSE50244.bulk.eset = readRDS('Data2/GSE50244bulkeset.rds')
-GSE50244.bulk.eset    
-
-EMTAB.eset = readRDS('Data2/EMTABesethealthy.rds')
-EMTAB.eset
-
-
-Est.prop.GSE50244 = music_prop(bulk.eset = GSE50244.bulk.eset, sc.eset = EMTAB.eset, clusters = 'cellType',
-                               samples = 'sampleID', select.ct = c('alpha', 'beta', 'delta', 'gamma',
-                                                                   'acinar', 'ductal'), verbose = F)
-names(Est.prop.GSE50244)
-
-jitter.fig = Jitter_Est(list(data.matrix(Est.prop.GSE50244$Est.prop.weighted),
-                             data.matrix(Est.prop.GSE50244$Est.prop.allgene)),
-                        method.name = c('MuSiC', 'NNLS'), title = 'Jitter plot of Est Proportions')
-
-m.prop.GSE50244 = rbind(melt(GSE50244.EMTAB.prop$Est.prop.weighted), 
-                        melt(GSE50244.EMTAB.prop$Est.prop.allgene))
-
-colnames(m.prop.GSE50244) = c('Sub', 'CellType', 'Prop')
-m.prop.GSE50244$CellType = factor(m.prop.GSE50244$CellType, levels = c('alpha', 'beta', 'delta', 'gamma', 'acinar', 'ductal'))
-m.prop.GSE50244$Method = factor(rep(c('MuSiC', 'NNLS'), each = 89*6), levels = c('MuSiC', 'NNLS'))
-m.prop.GSE50244$HbA1c = rep(GSE50244.bulk.eset$hba1c, 2*6)
-m.prop.GSE50244 = m.prop.GSE50244[!is.na(m.prop.GSE50244$HbA1c), ]
-m.prop.GSE50244$Disease = factor(c('Normal', 'T2D')[(m.prop.GSE50244$HbA1c > 6.5)+1], levels = c('Normal', 'T2D'))
-m.prop.GSE50244$D = (m.prop.GSE50244$Disease == 'T2D')/5
-m.prop.GSE50244 = rbind(subset(m.prop.GSE50244, Disease == 'Normal'), subset(m.prop.GSE50244, Disease != 'Normal'))
-
-jitter.new = ggplot(m.prop.GSE50244, aes(Method, Prop)) + 
-  geom_point(aes(fill = Method, color = Disease, stroke = D, shape = Disease), 
-             size = 2, alpha = 0.7, position = position_jitter(width=0.25, height=0)) +
-  facet_wrap(~ CellType, scales = 'free') + scale_colour_manual( values = c('white', "gray20")) +
-  scale_shape_manual(values = c(21, 24))+ theme_minimal()
-
-plot_grid(jitter.fig, jitter.new, labels = 'auto')
-
-
 #Epidish
+# https://bioconductor.org/packages/devel/bioc/vignettes/EpiDISH/inst/doc/EpiDISH.html
 library(EpiDISH)
-data(centEpiFibIC.m)
-data(DummyBeta.m)
 
-out.l <- epidish(beta.m = BetalValNormLNENs, ref.m = centDHSbloodDMC.m, method = "RPC") 
-out.l$estF
+out.l <- epidish(beta.m = BetalValNormLNENs, ref.m = centDHSbloodDMC.m, method = "RPC")
 boxplot(out.l$estF)
+
+
+# Music
+
+# https://cran.r-project.org/web/packages/BisqueRNA/vignettes/bisque.html
+# https://xuranw.github.io/MuSiC/reference/music_prop.html
+# https://www.synapse.org/#!Synapse:syn21041850/wiki/600865
+# https://xuranw.github.io/MuSiC/articles/MuSiC.html
+
+library(Biobase)
+library(MuSiC)
+library(BisqueRNA)
+
+bulk.eset <- Biobase::ExpressionSet(assayData = vstexpr_nosex_meso) # Transformation donnees bulk
+
+hlca = read.csv("Data2/hlca_counts.csv") # recuperation des donnees single cell
+
+individual.labels = colnames(hlca) # recuperation nom pour la suite
+cell.type.labels = rownames(hlca)
+  
+sample.ids <- colnames(hlca)
+
+# individual.ids and cell.types should be in the same order as in sample.ids
+sc.pheno <- data.frame(check.names=F, check.rows=F,
+                       stringsAsFactors=F,
+                       row.names=sample.ids,
+                       SubjectName=individual.labels,
+                       cellType=cell.type.labels)
+
+sc.meta <- data.frame(labelDescription=c("SubjectName",
+                                         "cellType"),
+                      row.names=c("SubjectName",
+                                  "cellType"))
+
+sc.pdata <- new("AnnotatedDataFrame",
+                data=sc.pheno,
+                varMetadata=sc.meta)
+
+sc.eset <- Biobase::ExpressionSet(assayData=hlca,
+                                  phenoData=sc.pdata)
+
+# Music mise en place
+music_prop(bulk.eset, sc.eset)
+
+# Visualisation MuSic Resultats
+
 
