@@ -69,7 +69,7 @@ library("DESeq2")
 # Mise en place des donnees
 
 # Localisation Data
-setwd(dir = "/home/manie/Documents/INSA_5BIM/GenomMedProjet/Projet_4")
+setwd(dir = "/home/anne/Melanie/Projet_4")
 # A ajuster selon les ordis (localisation des donnees)
 
 ## RNASeq Data
@@ -122,13 +122,14 @@ write.csv2(gene_counts_FPKM_LNNEN_carcinoids, "data_gene_counts_FPKM_LNNEN_carci
 #####################################################################################################
 
 # Ouvertures des donnees
-vstexpr_nosex_meso = read.csv("data_vstexpr_nosex_meso.csv", row.names = 1, sep=';', header=TRUE)
+setwd(dir = "/home/anne/Melanie/Projet_4")
+vstexpr_nosex_meso = read.csv("data_vstexpr_nosex_meso.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 gene_counts_FPKM_LNNEN_carcinoids = read.csv("data_gene_counts_FPKM_LNNEN_carcinoids.csv", row.names = 1, sep=';', header=TRUE)
 BetalValNormLNENs <- read.csv('Data/NormalisedFilteredBetaTable_LnenSamples.csv', header = T, row.names = 1)
 
 # Les fichiers à utiliser sont : vstexpr_nosex_meso, gene_counts_FPKM_LNNEN_carcinoids et BetalValNormLNENs pour la méthylation
 
-# On fait correspondre les ID (ens avec biomaRt):
+# On fait correspondre les ID (ens avec biomaRt): (SI BESOIN EST)
 library(biomaRt)
 
 Names = rownames(vstexpr_nosex_meso)
@@ -150,6 +151,7 @@ library(EpiDISH)
 out.l <- epidish(beta.m = BetalValNormLNENs, ref.m = centDHSbloodDMC.m, method = "RPC")
 boxplot(out.l$estF)
 
+### ICI on a des resultats
 
 # Music
 
@@ -162,12 +164,27 @@ library(Biobase)
 library(MuSiC)
 library(BisqueRNA)
 
-bulk.eset <- Biobase::ExpressionSet(assayData = vstexpr_nosex_meso) # Transformation donnees bulk
+Matrix_bulk = as.matrix(vstexpr_nosex_meso)
+bulk.eset <- Biobase::ExpressionSet(assayData = Matrix_bulk) # Transformation donnees bulk
 
-hlca = read.csv("Data2/hlca_counts.csv") # recuperation des donnees single cell
+hlca = read.csv("Data2/hlca_counts.csv", row.names = 1) # recuperation des donnees single cell
 
-individual.labels = colnames(hlca) # recuperation nom pour la suite
-cell.type.labels = rownames(hlca)
+
+# recuperation des genes et des ind
+Col = colnames(hlca)
+Ind <- c()
+Gen <- c()
+
+for (i in 1:length(Col)){
+Indi = unlist(strsplit(Col[i], split = ".", fixed=TRUE))[1]
+Geni = unlist(strsplit(Col[i], split = ".", fixed=TRUE))[3]
+
+Ind <- c(Ind,Indi)
+Gen <- c(Gen,Geni)
+}
+
+individual.labels = Ind # recuperation nom pour la suite
+cell.type.labels = Gen
   
 sample.ids <- colnames(hlca)
 
@@ -187,12 +204,23 @@ sc.pdata <- new("AnnotatedDataFrame",
                 data=sc.pheno,
                 varMetadata=sc.meta)
 
-sc.eset <- Biobase::ExpressionSet(assayData=hlca,
+sc.eset <- Biobase::ExpressionSet(assayData=as.matrix(hlca),
                                   phenoData=sc.pdata)
 
 # Music mise en place
-music_prop(bulk.eset, sc.eset)
+library(xbioc)
+Est.prop = music_prop(bulk.eset, sc.eset, clusters = 'cellType',
+                      samples = 'sampleID')
+names(Est.prop)
 
-# Visualisation MuSic Resultats
 
+# Exemple TUTO
 
+GSE50244.bulk.eset = readRDS("Data2/GSE50244bulkeset.rds")
+EMTAB.eset = readRDS("Data2/EMTABesethealthy.rds")
+
+Est.prop.GSE50244 = music_prop(bulk.eset = GSE50244.bulk.eset, sc.eset = EMTAB.eset, clusters = 'cellType',
+                               samples = 'sampleID', select.ct = c('alpha', 'beta', 'delta', 'gamma',
+                                                                   'acinar', 'ductal'), verbose = F)
+names(Est.prop.GSE50244)
+      
