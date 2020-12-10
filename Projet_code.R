@@ -160,57 +160,104 @@ boxplot(out.l$estF)
 # https://www.synapse.org/#!Synapse:syn21041850/wiki/600865
 # https://xuranw.github.io/MuSiC/articles/MuSiC.html
 
-library(Biobase)
-library(MuSiC)
-library(BisqueRNA)
 
-Matrix_bulk = as.matrix(vstexpr_nosex_meso)
-bulk.eset <- Biobase::ExpressionSet(assayData = Matrix_bulk) # Transformation donnees bulk
+
+
+bulk.eset <- Biobase::ExpressionSet(assayData = as.matrix(vstexpr_nosex_meso)) # Transformation donnees bulk
+
+saveRDS(object = bulk.eset, "bulk.eset.rds")
+remove(vstexpr_nosex_meso, bulk.eset)
 
 hlca = read.csv("Data2/hlca_counts.csv", row.names = 1) # recuperation des donnees single cell
 
 
 # recuperation des genes et des ind
 Col = colnames(hlca)
+Ind_id <- c()
+Gen_id <- c()
 Ind <- c()
 Gen <- c()
+Ind_name <- c()
+Gen_name <- c()
+
+
 
 for (i in 1:length(Col)){
-Indi = unlist(strsplit(Col[i], split = ".", fixed=TRUE))[1]
-Geni = unlist(strsplit(Col[i], split = ".", fixed=TRUE))[3]
+A = unlist(strsplit(Col[i], split = ".", fixed=TRUE))[1]
+Indi = unlist(strsplit(A, split = "_", fixed=TRUE))[1]
+Geni = unlist(strsplit(A, split = "_", fixed=TRUE))[2]
 
-Ind <- c(Ind,Indi)
-Gen <- c(Gen,Geni)
+if (is.element(Indi,Ind)){
+  R <- which(Ind==Indi)
+  Ind_id <- c(Ind_id,R)
+}
+else{
+  Ind <-c(Ind,Indi)
+  R <- which(Ind==Indi)
+  Ind_id <- c(Ind_id,R)
 }
 
-individual.labels = Ind # recuperation nom pour la suite
-cell.type.labels = Gen
-  
+Ind_name <- c(Ind_name,Indi)
+
+if (is.element(Geni,Gen)){
+  R <- which(Gen==Geni)
+  Gen_id <- c(Gen_id,R)
+}
+else{
+  Gen <-c(Gen,Geni)
+  R <- which(Gen==Geni)
+  Gen_id <- c(Gen_id,R)
+}
+
+Gen_name <- c(Gen_name,Geni)
+}
+
 sample.ids <- colnames(hlca)
 
+remove( Indi,Geni,i,A,R)
+remove(Ind,Gen, Col)
 # individual.ids and cell.types should be in the same order as in sample.ids
 sc.pheno <- data.frame(check.names=F, check.rows=F,
                        stringsAsFactors=F,
                        row.names=sample.ids,
-                       SubjectName=individual.labels,
-                       cellType=cell.type.labels)
+                       sampleID=as.factor(Ind_name),
+                       SubjectName=Ind_id,
+                       cellTypeID=Gen_id,
+                       cellType=as.factor(Gen_name))
 
-sc.meta <- data.frame(labelDescription=c("SubjectName",
-                                         "cellType"),
-                      row.names=c("SubjectName",
-                                  "cellType"))
+remove(Ind_id,Gen_id,Gen_name, Ind_name,Col)
+
+sc.meta <- data.frame(labelDescription=c("sampleID","SubjectName",
+                                         "cellTypeID","cellType"),
+                      row.names=c("sampleID","SubjectName",
+                                  "cellTypeID","cellType"))
 
 sc.pdata <- new("AnnotatedDataFrame",
                 data=sc.pheno,
                 varMetadata=sc.meta)
 
+remove(sc.meta,sc.pheno)
+
 sc.eset <- Biobase::ExpressionSet(assayData=as.matrix(hlca),
                                   phenoData=sc.pdata)
 
+
+#Nettoyage
+remove(hlca,individual.labels, cell.type.labels, sc.pdata, sample.ids)
+saveRDS(object = sc.eset, "sc.eset.rds")
+remove( sc.eset)
+
 # Music mise en place
 library(xbioc)
-Est.prop = music_prop(bulk.eset, sc.eset, clusters = 'cellType',
-                      samples = 'sampleID')
+library(Biobase)
+library(MuSiC)
+library(BisqueRNA)
+
+bulk.eset <- readRDS(file = "bulk.eset.rds")
+sc.eset <- readRDS(file = "sc.eset.rds")
+
+# En parametre on donne ce qui sert a faire la clusterisation et les echantillons, verbose c'est si on veut afficher les resultats
+Est.prop = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID')
 names(Est.prop)
 
 
@@ -221,6 +268,6 @@ EMTAB.eset = readRDS("Data2/EMTABesethealthy.rds")
 
 Est.prop.GSE50244 = music_prop(bulk.eset = GSE50244.bulk.eset, sc.eset = EMTAB.eset, clusters = 'cellType',
                                samples = 'sampleID', select.ct = c('alpha', 'beta', 'delta', 'gamma',
-                                                                   'acinar', 'ductal'), verbose = F)
+                                                                   'acinar', 'ductal'))
 names(Est.prop.GSE50244)
       
