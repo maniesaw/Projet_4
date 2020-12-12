@@ -131,6 +131,7 @@ BetalValNormLNENs <- read.csv('Data/NormalisedFilteredBetaTable_LnenSamples.csv'
 
 # On fait correspondre les ID (ens avec biomaRt): (SI BESOIN EST)
 library(biomaRt)
+browseVignettes("biomaRt")
 
 Names = rownames(vstexpr_nosex_meso)
 
@@ -138,8 +139,11 @@ ensembl<-  useMart("ensembl",dataset="hsapiens_gene_ensembl") # Get Ensembl data
 # From the "mart" object get the attribute of interest, here we extract the ensembl Id such as ENS000 and REf RNASeq ID (something like NM_...)
 ensembl_ID_refseq_mrna <- getBM(attributes=c('ensembl_gene_id_version','refseq_mrna'), mart = ensembl)
 
-#vstexpr_nosex_meso_merge = merge(vstexpr_nosex_meso, ensembl_ID_refseq_mrna)
- 
+vstexpr_nosex_meso_merge = merge(vstexpr_nosex_meso, ensembl_ID_refseq_mrna)
+
+
+
+
 #####################################################################################
 
 # Tests des packages
@@ -161,18 +165,62 @@ boxplot(out.l$estF)
 # https://xuranw.github.io/MuSiC/articles/MuSiC.html
 
 
-
-
 bulk.eset <- Biobase::ExpressionSet(assayData = as.matrix(vstexpr_nosex_meso)) # Transformation donnees bulk
 
 saveRDS(object = bulk.eset, "bulk.eset.rds")
 remove(vstexpr_nosex_meso, bulk.eset)
 
+setwd(dir = "/home/anne/Melanie/Projet_4")
 hlca = read.csv("Data2/hlca_counts.csv", row.names = 1) # recuperation des donnees single cell
+
+# Mise en place de la conversion
+
+library(biomaRt)
+mart <- useMart('ENSEMBL_MART_ENSEMBL')
+mart <- useDataset('hsapiens_gene_ensembl', mart)
+
+annotLookup <- getBM(
+  mart = mart,
+  attributes = c(
+    'hgnc_symbol',
+    'ensembl_gene_id'),
+  uniqueRows = TRUE)
+
+head(annotLookup)
+
+
+HGCN =row.names(hlca)
+a= 0
+for (i in 1:length(HGCN)){
+  if (!(is.element(HGCN[i], annotLookup$hgnc_symbol))){
+    
+  }
+  else{
+    Elmt = which(annotLookup$hgnc_symbol==HGCN[i])
+    HGCN[i] = annotLookup$ensembl_gene_id[Elmt]
+    a = a+1}
+}
+# Affiche le nombre de correctement change
+print(a)
+
+#On remet HGCN dans hlca
+#On supprime les duplicats 
+Dup =  rev(which(duplicated(HGCN)))
+for (i in Dup){
+  hlca <- hlca[-i,]
+}
+
+row.names(hlca) <- hlca$HGCN
+hlca <- hlca[,-9410]
+
+remove(annotLookup, mart, a, Dup, Elmt,HGCN,i)
+
+write.csv2(hlca,"hlca2.csv")
+hlca2 = read.csv("hlca2.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 
 
 # recuperation des genes et des ind
-Col = colnames(hlca)
+Col = colnames(hlca2)
 Ind_id <- c()
 Gen_id <- c()
 Ind <- c()
@@ -212,7 +260,7 @@ else{
 Gen_name <- c(Gen_name,Geni)
 }
 
-sample.ids <- colnames(hlca)
+sample.ids <- colnames(hlca2)
 
 remove( Indi,Geni,i,A,R)
 remove(Ind,Gen, Col)
@@ -225,7 +273,7 @@ sc.pheno <- data.frame(check.names=F, check.rows=F,
                        cellTypeID=Gen_id,
                        cellType=as.factor(Gen_name))
 
-remove(Ind_id,Gen_id,Gen_name, Ind_name,Col)
+remove(Ind_id,Gen_id,Gen_name, Ind_name)
 
 sc.meta <- data.frame(labelDescription=c("sampleID","SubjectName",
                                          "cellTypeID","cellType"),
@@ -238,13 +286,13 @@ sc.pdata <- new("AnnotatedDataFrame",
 
 remove(sc.meta,sc.pheno)
 
-sc.eset <- Biobase::ExpressionSet(assayData=as.matrix(hlca),
+sc.eset <- Biobase::ExpressionSet(assayData=as.matrix(hlca2),
                                   phenoData=sc.pdata)
 
 
 #Nettoyage
-remove(hlca,individual.labels, cell.type.labels, sc.pdata, sample.ids)
-saveRDS(object = sc.eset, "sc.eset.rds")
+remove(hlca2,individual.labels, cell.type.labels, sc.pdata, sample.ids)
+saveRDS(object = sc.eset, "sc.eset2.rds")
 remove( sc.eset)
 
 # Music mise en place
@@ -253,8 +301,9 @@ library(Biobase)
 library(MuSiC)
 library(BisqueRNA)
 
+setwd(dir = "/home/anne/Melanie/Projet_4")
 bulk.eset <- readRDS(file = "bulk.eset.rds")
-sc.eset <- readRDS(file = "sc.eset.rds")
+sc.eset <- readRDS(file = "sc.eset2.rds")
 
 # En parametre on donne ce qui sert a faire la clusterisation et les echantillons, verbose c'est si on veut afficher les resultats
 Est.prop = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID')
