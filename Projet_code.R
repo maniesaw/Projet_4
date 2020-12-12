@@ -368,7 +368,9 @@ saveRDS(object = sc.eset, "sc.eset4.rds")
 remove(hlca4)
 remove( sc.eset)
 
-# Music mise en place
+######################################################################
+
+## Lancement de MuSiC
 library(xbioc)
 library(Biobase)
 library(MuSiC)
@@ -383,8 +385,104 @@ Est.prop = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'samp
 names(Est.prop)
 
 saveRDS(object = Est.prop, "Est.prop.rds")
+#1 B001222" "B001224" "B001227" "B001235" "B001237" "B001239" "B002578" "B002579"
+#2 "BP12"    "BP7"     "B001223" "B001225" "B001229" "B001234" "BP4"     "BP9"    
+#3 "B002580" "B002592" "B002593" "B001226" "B001228" "B001238" "B002586" "B002591"
+#4 "BP10"    "BP5"     "BP6"     "BP11"    "BP1"     "BP8"     "BP2"     "BP3"    
+#5 "B002014" "B002382" "B003138" "B003140" "B003141" "B002383" "B003135" "B003136"
+#6 "B003137" "B002386" "B003139" "B002385" "B003142" "B001773" "B002460" "B003269"
+#7 "B002461" "B001772" "B001774" "B002464" "B001769" "B001771"
 
-# verification des concordances des genes
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop$Est.prop.weighted),
+                             data.matrix(Est.prop$Est.prop.allgene)),
+                        method.name = c('MuSiC','NNLS'), title = 'Jitter plot of Est Proportions')
+
+
+plot_grid(jitter.fig, labels = 'auto')
+
+
+# Part 1
+Est.prop1 = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID', 
+                       select.ct  = c("B001222","B001224", "B001227" ,"B001235" ,"B001237", "B001239","B002578","B002579"))
+
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop1$Est.prop.weighted),
+                             data.matrix(Est.prop1$Est.prop.allgene)),
+                        method.name = c('MuSiC','NNLS'), title = 'Jitter plot of Est Proportions')
+
+
+plot_grid(jitter.fig, labels = 'auto')
+
+# Part 2
+Est.prop2 = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID', 
+                       select.ct  = c("BP12","BP7", "B001223", "B001225", "B001229", "B001234" ,"BP4","BP9"   ))
+
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop2$Est.prop.weighted),
+                             data.matrix(Est.prop2$Est.prop.allgene)),
+                        method.name = c('MuSiC','NNLS'), title = 'Jitter plot of Est Proportions')
+
+
+plot_grid(jitter.fig, labels = 'auto')
+
+# Part 3
+Est.prop3 = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID', 
+                       select.ct  = c("B002580","B002592", "B002593", "B001226" ,"B001228", "B001238" ,"B002586", "B002591"))
+
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop3$Est.prop.weighted),
+                             data.matrix(Est.prop3$Est.prop.allgene)),
+                        method.name = c('MuSiC','NNLS'), title = 'Jitter plot of Est Proportions')
+
+
+plot_grid(jitter.fig, labels = 'auto')
+
+# Part 4
+Est.prop4 = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID', 
+                       select.ct  = c( "BP10",    "BP5" ,    "BP6",     "BP11" ,   "BP1" ,    "BP8"   ,  "BP2" ,    "BP3"))
+
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop4$Est.prop.weighted),
+                             data.matrix(Est.prop4$Est.prop.allgene)),
+                        method.name = c('MuSiC','NNLS'), title = 'Jitter plot of Est Proportions')
+
+
+plot_grid(jitter.fig, labels = 'auto')
+
+# Part 5
+Est.prop5 = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID', 
+                       select.ct  = c("B002014","B002382","B003138","B003140", "B003141" ,"B002383", "B003135", "B003136"))
+
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop5$Est.prop.weighted),
+                             data.matrix(Est.prop5$Est.prop.allgene)),
+                        method.name = c('MuSiC','NNLS'), title = 'Jitter plot of Est Proportions')
+
+
+plot_grid(jitter.fig, labels = 'auto')
+
+# Part 6
+Est.prop6 = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID', 
+                       select.ct  = c("B003137", "B002386", "B003139", "B002385", "B003142", "B001773", "B002460", "B003269"))
+
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop6$Est.prop.weighted),
+                             data.matrix(Est.prop6$Est.prop.allgene)),
+                        method.name = c('MuSiC','NNLS'), title = 'Jitter plot of Est Proportions')
+
+
+plot_grid(jitter.fig, labels = 'auto')
+
+# Part 7
+Est.prop7 = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID', 
+                       select.ct  = c("B002461", "B001772", "B001774","B002464", "B001769", "B001771"))
+
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop7$Est.prop.weighted),
+                             data.matrix(Est.prop7$Est.prop.allgene)),
+                        method.name = c('MuSiC','NNLS'), title = 'Jitter plot of Est Proportions')
+
+
+plot_grid(jitter.fig, labels = 'auto')
+
+#########################################################################################################
+
+## Annexe de MuSiC
+
+### Verification des concordances des genes
 GeneSc2 = GeneSc
 for (i in 1:length(GeneSc)){
 A = GeneSc[i]
@@ -399,6 +497,7 @@ for (i in 1:length(Namebulk)){
   Namebulk2[i]=B
 }
 
+### Recuperation des genes en commun 
 comp = 0
 for (i in Namebulk2){
   if (is.element(i,GeneSc2)){
@@ -407,8 +506,9 @@ for (i in Namebulk2){
    print(i) 
 }
 
-# Exemple TUTO
-
+## Exemple TUTO MuSiC
+library(cowplot)
+library(reshape2)
 GSE50244.bulk.eset = readRDS("Data2/GSE50244bulkeset.rds")
 EMTAB.eset = readRDS("Data2/EMTABesethealthy.rds")
 
@@ -417,3 +517,27 @@ Est.prop.GSE50244 = music_prop(bulk.eset = GSE50244.bulk.eset, sc.eset = EMTAB.e
                                                                    'acinar', 'ductal'))
 names(Est.prop.GSE50244)
       
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop.GSE50244$Est.prop.weighted),
+                             data.matrix(Est.prop.GSE50244$Est.prop.allgene)),
+                        method.name = c('MuSiC', 'NNLS'), title = 'Jitter plot of Est Proportions')
+
+GSE50244.EMTAB.prop=Est.prop.GSE50244
+m.prop.GSE50244 = rbind(melt(GSE50244.EMTAB.prop$Est.prop.weighted), 
+                        melt(GSE50244.EMTAB.prop$Est.prop.allgene))
+
+colnames(m.prop.GSE50244) = c('Sub', 'CellType', 'Prop')
+m.prop.GSE50244$CellType = factor(m.prop.GSE50244$CellType, levels = c('alpha', 'beta', 'delta', 'gamma', 'acinar', 'ductal'))
+m.prop.GSE50244$Method = factor(rep(c('MuSiC', 'NNLS'), each = 89*6), levels = c('MuSiC', 'NNLS'))
+m.prop.GSE50244$HbA1c = rep(GSE50244.bulk.eset$hba1c, 2*6)
+m.prop.GSE50244 = m.prop.GSE50244[!is.na(m.prop.GSE50244$HbA1c), ]
+m.prop.GSE50244$Disease = factor(c('Normal', 'T2D')[(m.prop.GSE50244$HbA1c > 6.5)+1], levels = c('Normal', 'T2D'))
+m.prop.GSE50244$D = (m.prop.GSE50244$Disease == 'T2D')/5
+m.prop.GSE50244 = rbind(subset(m.prop.GSE50244, Disease == 'Normal'), subset(m.prop.GSE50244, Disease != 'Normal'))
+
+jitter.new = ggplot(m.prop.GSE50244, aes(Method, Prop)) + 
+  geom_point(aes(fill = Method, color = Disease, stroke = D, shape = Disease), 
+             size = 2, alpha = 0.7, position = position_jitter(width=0.25, height=0)) +
+  facet_wrap(~ CellType, scales = 'free') + scale_colour_manual( values = c('white', "gray20")) +
+  scale_shape_manual(values = c(21, 24))+ theme_minimal()
+
+plot_grid(jitter.fig, jitter.new, labels = 'auto')
