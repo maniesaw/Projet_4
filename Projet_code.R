@@ -164,6 +164,8 @@ boxplot(out.l$estF)
 # https://www.synapse.org/#!Synapse:syn21041850/wiki/600865
 # https://xuranw.github.io/MuSiC/articles/MuSiC.html
 
+Namebulk <- row.names(vstexpr_nosex_meso)
+
 
 bulk.eset <- Biobase::ExpressionSet(assayData = as.matrix(vstexpr_nosex_meso)) # Transformation donnees bulk
 
@@ -172,6 +174,29 @@ bulk.eset<- Biobase::ExpressionSet(assayData = as.matrix(vstexpr_nosex_meso))
 
 saveRDS(object = bulk.eset, "bulk.eset3.rds")
 remove(vstexpr_nosex_meso, bulk.eset)
+
+# Version en enlevant pour concordance des noms
+setwd(dir = "/home/anne/Melanie/Projet_4")
+vstexpr_nosex_meso = read.csv("data_vstexpr_nosex_meso.csv", row.names = 1, sep=';', header=TRUE, dec=",")
+
+Namebulk <- row.names(vstexpr_nosex_meso)
+Namebulk2 = Namebulk
+for (i in 1:length(Namebulk)){
+  A = Namebulk[i]
+  B = unlist(strsplit(A, split = ".", fixed=TRUE))[1]
+  Namebulk2[i]=B
+}
+
+vstexpr_nosex_meso2 = vstexpr_nosex_meso
+vstexpr_nosex_meso2$Namebulk = Namebulk2
+row.names(vstexpr_nosex_meso2) <- vstexpr_nosex_meso2$Namebulk
+vstexpr_nosex_meso2 <- vstexpr_nosex_meso2[,-87]
+write.csv2(vstexpr_nosex_meso2,"vstexpr_nosex_meso2.csv")
+
+bulk.eset<- Biobase::ExpressionSet(assayData = as.matrix(vstexpr_nosex_meso2))
+saveRDS(object = bulk.eset, "bulk.eset4.rds")
+remove(vstexpr_nosex_meso2, bulk.eset)
+
 
 setwd(dir = "/home/anne/Melanie/Projet_4")
 hlca = read.csv("Data2/hlca_counts.csv", row.names = 1) # recuperation des donnees single cell
@@ -246,11 +271,28 @@ for (i in 1:length(namehlca)){
 hlca3 <- hlca2[-Ind,]
 
 write.csv2(hlca3,"hlca3.csv")
-hlca3 = read.csv("hlca3.csv", row.names = 1, sep=';', header=TRUE, dec=",")
+remove(hlca2,A,i,Ind,namehlca,val)
 
+hlca3 = read.csv("hlca3.csv", row.names = 1, sep=';', header=TRUE, dec=",")
+GeneSc <-row.names(hlca3)
+
+GeneSc2 = GeneSc
+for (i in 1:length(GeneSc)){
+  A = GeneSc[i]
+  B = unlist(strsplit(A, split = ".", fixed=TRUE))[1]
+  GeneSc2[i]=B
+}
+hlca3$GeneSc = GeneSc2
+row.names(hlca3) <- hlca3$GeneSc
+hlca3 <- hlca3[,-9410]
+write.csv2(hlca3,"hlca4.csv")
+
+hlca4 = hlca3
+remove(hlca3,GeneSc,GeneSc2,i,A,B)
+hlca4 = read.csv("hlca4.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 
 # recuperation des genes et des ind
-Col = colnames(hlca3)
+Col = colnames(hlca4)
 Ind_id <- c()
 Gen_id <- c()
 Ind <- c()
@@ -290,7 +332,7 @@ else{
 Gen_name <- c(Gen_name,Geni)
 }
 
-sample.ids <- colnames(hlca3)
+sample.ids <- colnames(hlca4)
 
 remove( Indi,Geni,i,A,R)
 remove(Ind,Gen, Col)
@@ -316,13 +358,14 @@ sc.pdata <- new("AnnotatedDataFrame",
 
 remove(sc.meta,sc.pheno)
 
-sc.eset <- Biobase::ExpressionSet(assayData=as.matrix(hlca3),
+sc.eset <- Biobase::ExpressionSet(assayData=as.matrix(hlca4),
                                   phenoData=sc.pdata)
 
 
 #Nettoyage
 remove(hlca3,individual.labels, cell.type.labels, sc.pdata, sample.ids)
-saveRDS(object = sc.eset, "sc.eset2.rds")
+saveRDS(object = sc.eset, "sc.eset4.rds")
+remove(hlca4)
 remove( sc.eset)
 
 # Music mise en place
@@ -332,13 +375,37 @@ library(MuSiC)
 library(BisqueRNA)
 
 setwd(dir = "/home/anne/Melanie/Projet_4")
-bulk.eset <- readRDS(file = "bulk.eset.rds")
-sc.eset <- readRDS(file = "sc.eset2.rds")
+bulk.eset <- readRDS(file = "bulk.eset4.rds")
+sc.eset <- readRDS(file = "sc.eset4.rds")
 
 # En parametre on donne ce qui sert a faire la clusterisation et les echantillons, verbose c'est si on veut afficher les resultats
 Est.prop = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID')
 names(Est.prop)
 
+saveRDS(object = Est.prop, "Est.prop.rds")
+
+# verification des concordances des genes
+GeneSc2 = GeneSc
+for (i in 1:length(GeneSc)){
+A = GeneSc[i]
+B = unlist(strsplit(A, split = ".", fixed=TRUE))[1]
+GeneSc2[i]=B
+}
+
+Namebulk2 = Namebulk
+for (i in 1:length(Namebulk)){
+  A = Namebulk[i]
+  B = unlist(strsplit(A, split = ".", fixed=TRUE))[1]
+  Namebulk2[i]=B
+}
+
+comp = 0
+for (i in Namebulk2){
+  if (is.element(i,GeneSc2)){
+    comp = comp+1
+  }
+   print(i) 
+}
 
 # Exemple TUTO
 
