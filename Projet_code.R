@@ -167,7 +167,10 @@ boxplot(out.l$estF)
 
 bulk.eset <- Biobase::ExpressionSet(assayData = as.matrix(vstexpr_nosex_meso)) # Transformation donnees bulk
 
-saveRDS(object = bulk.eset, "bulk.eset.rds")
+vstexpr_nosex_meso <- vstexpr_nosex_meso[1:30000,]
+bulk.eset<- Biobase::ExpressionSet(assayData = as.matrix(vstexpr_nosex_meso))
+
+saveRDS(object = bulk.eset, "bulk.eset3.rds")
 remove(vstexpr_nosex_meso, bulk.eset)
 
 setwd(dir = "/home/anne/Melanie/Projet_4")
@@ -178,6 +181,7 @@ hlca = read.csv("Data2/hlca_counts.csv", row.names = 1) # recuperation des donne
 library(biomaRt)
 mart <- useMart('ENSEMBL_MART_ENSEMBL')
 mart <- useDataset('hsapiens_gene_ensembl', mart)
+
 
 annotLookup <- getBM(
   mart = mart,
@@ -203,6 +207,8 @@ for (i in 1:length(HGCN)){
 # Affiche le nombre de correctement change
 print(a)
 
+hlca$HGCN <- HGCN
+
 #On remet HGCN dans hlca
 #On supprime les duplicats 
 Dup =  rev(which(duplicated(HGCN)))
@@ -210,17 +216,41 @@ for (i in Dup){
   hlca <- hlca[-i,]
 }
 
+
 row.names(hlca) <- hlca$HGCN
 hlca <- hlca[,-9410]
 
 remove(annotLookup, mart, a, Dup, Elmt,HGCN,i)
 
 write.csv2(hlca,"hlca2.csv")
+remove(hlca2,hlca)
 hlca2 = read.csv("hlca2.csv", row.names = 1, sep=';', header=TRUE, dec=",")
+
+#Enleve ceux pas ens
+namehlca <-rownames(hlca2)
+Ind <- c()
+library(stringr)
+for (i in 1:length(namehlca)){
+  val = length(namehlca)-i+1
+  A = namehlca[val][1][1]
+  if (str_detect(A, "ENSG")){
+    
+  }
+  else{
+   Ind <- c(Ind,val)
+  }
+  print(val)
+}
+
+
+hlca3 <- hlca2[-Ind,]
+
+write.csv2(hlca3,"hlca3.csv")
+hlca3 = read.csv("hlca3.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 
 
 # recuperation des genes et des ind
-Col = colnames(hlca2)
+Col = colnames(hlca3)
 Ind_id <- c()
 Gen_id <- c()
 Ind <- c()
@@ -260,7 +290,7 @@ else{
 Gen_name <- c(Gen_name,Geni)
 }
 
-sample.ids <- colnames(hlca2)
+sample.ids <- colnames(hlca3)
 
 remove( Indi,Geni,i,A,R)
 remove(Ind,Gen, Col)
@@ -286,12 +316,12 @@ sc.pdata <- new("AnnotatedDataFrame",
 
 remove(sc.meta,sc.pheno)
 
-sc.eset <- Biobase::ExpressionSet(assayData=as.matrix(hlca2),
+sc.eset <- Biobase::ExpressionSet(assayData=as.matrix(hlca3),
                                   phenoData=sc.pdata)
 
 
 #Nettoyage
-remove(hlca2,individual.labels, cell.type.labels, sc.pdata, sample.ids)
+remove(hlca3,individual.labels, cell.type.labels, sc.pdata, sample.ids)
 saveRDS(object = sc.eset, "sc.eset2.rds")
 remove( sc.eset)
 
