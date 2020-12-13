@@ -441,6 +441,27 @@ jitter.fig = Jitter_Est(list(data.matrix(Est.prop$Est.prop.weighted)),
 
 plot_grid(jitter.fig, labels = 'auto')
 
+## Clusterisation
+
+Mousesub.eset = readRDS(file = "sc.eset/sc.eset4.rds")
+Mousesub.basis = music_basis(Mousesub.eset, clusters = 'cellType', samples = 'sampleID')
+
+# Plot the dendrogram of design matrix and cross-subject mean of realtive abundance
+par(mfrow = c(1, 2))
+d <- dist(t(log(Mousesub.basis$Disgn.mtx + 1e-6)), method = "euclidean")
+
+# Hierarchical clustering using Complete Linkage
+hc1 <- hclust(d, method = "complete" )
+# Plot the obtained dendrogram
+plot(hc1, cex = 0.6, hang = -1, main = 'Cluster log(Design Matrix)')
+
+d <- dist(t(log(Mousesub.basis$M.theta + 1e-8)), method = "euclidean")
+# Hierarchical clustering using Complete Linkage
+hc2 <- hclust(d, method = "complete")
+# Plot the obtained dendrogram
+plot(hc2, cex = 0.6, hang = -1, main = 'Cluster log(Mean of RA)')
+
+
 #########################################################################################################
 
 ## Annexe de MuSiC
@@ -523,3 +544,4 @@ d <- dist(t(log(Mousesub.basis$M.theta + 1e-8)), method = "euclidean")
 hc2 <- hclust(d, method = "complete")
 # Plot the obtained dendrogram
 plot(hc2, cex = 0.6, hang = -1, main = 'Cluster log(Mean of RA)')
+
