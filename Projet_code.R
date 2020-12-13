@@ -1,76 +1,8 @@
-# Mise en place des librairies
+# Data Preprocessing
 
-# Supervised
-
-# RNAseq
-
-## DeconvSeq
-library(deconvSeq)
-
-## DeconRNASeq
-library(DeconRNASeq)
-
-## CellMix
-# ?
-
-## MuSic
-library(MuSiC)
-
-# methylation arrays
-
-## EpiDISH
-library(EpiDISH)
-
-# BOTH
-
-## DIABLO
-library('mixOmics')
-
-# Unsupervised
-
-# RNA-seq
-
-## deconica
-library(deconica)
-
-## fastICA
-library(fastICA)
-
-# Methylation arrays
-
-## RefFreeEWAS
-library(RefFreeEWAS)
-
-## medepir
-library(medepir)
-
-## DecompPipeline
-library(DecompPipeline)
-
-## MeDeCom
-#???
-
-##  FactorViz
-library(FactorViz)
-
-# ANY
-
-## Decoder
-library(decoder)
-
-# BOTH
-
-## intNMF
-library(IntNMF)
-
-# Packages annexes nécessaires
-library("DESeq2")
-
-# Mise en place des donnees
-
-# Localisation Data
+## Localisation Data
 setwd(dir = "/home/anne/Melanie/Projet_4")
-# A ajuster selon les ordis (localisation des donnees)
+# Adjust localisation
 
 ## RNASeq Data
 
@@ -119,67 +51,47 @@ print(dim(BetalValNormLNENs ))
 write.csv2(vstexpr_nosex_meso,"data_vstexpr_nosex_meso.csv")
 write.csv2(gene_counts_FPKM_LNNEN_carcinoids, "data_gene_counts_FPKM_LNNEN_carcinoids.csv")
 
-#####################################################################################################
+################################################################################
 
-# Ouvertures des donnees
+# Data opening
 setwd(dir = "/home/anne/Melanie/Projet_4")
+
 vstexpr_nosex_meso = read.csv("data_vstexpr_nosex_meso.csv", row.names = 1, sep=';', header=TRUE, dec=",")
-gene_counts_FPKM_LNNEN_carcinoids = read.csv("data_gene_counts_FPKM_LNNEN_carcinoids.csv", row.names = 1, sep=';', header=TRUE)
+gene_counts_FPKM_LNNEN_carcinoids = read.csv("data_gene_counts_FPKM_LNNEN_carcinoids.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 BetalValNormLNENs <- read.csv('Data/NormalisedFilteredBetaTable_LnenSamples.csv', header = T, row.names = 1)
 
-# Les fichiers à utiliser sont : vstexpr_nosex_meso, gene_counts_FPKM_LNNEN_carcinoids et BetalValNormLNENs pour la méthylation
-
-# On fait correspondre les ID (ens avec biomaRt): (SI BESOIN EST)
-library(biomaRt)
-browseVignettes("biomaRt")
-
-Names = rownames(vstexpr_nosex_meso)
-
-ensembl<-  useMart("ensembl",dataset="hsapiens_gene_ensembl") # Get Ensembl data for human
-# From the "mart" object get the attribute of interest, here we extract the ensembl Id such as ENS000 and REf RNASeq ID (something like NM_...)
-ensembl_ID_refseq_mrna <- getBM(attributes=c('ensembl_gene_id_version','refseq_mrna'), mart = ensembl)
-
-vstexpr_nosex_meso_merge = merge(vstexpr_nosex_meso, ensembl_ID_refseq_mrna)
+# Files : vstexpr_nosex_meso, gene_counts_FPKM_LNNEN_carcinoids et BetalValNormLNENs for méthylation
 
 
+################################################################################
+################################################################################
+
+# Tests of packages
 
 
-#####################################################################################
+## Epidish
 
-# Tests des packages
-
-#Epidish
 # https://bioconductor.org/packages/devel/bioc/vignettes/EpiDISH/inst/doc/EpiDISH.html
 library(EpiDISH)
 
 out.l <- epidish(beta.m = BetalValNormLNENs, ref.m = centDHSbloodDMC.m, method = "RPC")
 boxplot(out.l$estF)
 
-### ICI on a des resultats
+################################################################################
 
-# Music
+## Music
 
 # https://cran.r-project.org/web/packages/BisqueRNA/vignettes/bisque.html
 # https://xuranw.github.io/MuSiC/reference/music_prop.html
 # https://www.synapse.org/#!Synapse:syn21041850/wiki/600865
 # https://xuranw.github.io/MuSiC/articles/MuSiC.html
 
+
+### Preprocessing eset
+
+#### bulk eset MESO
 Namebulk <- row.names(vstexpr_nosex_meso)
 
-
-bulk.eset <- Biobase::ExpressionSet(assayData = as.matrix(vstexpr_nosex_meso)) # Transformation donnees bulk
-
-vstexpr_nosex_meso <- vstexpr_nosex_meso[1:30000,]
-bulk.eset<- Biobase::ExpressionSet(assayData = as.matrix(vstexpr_nosex_meso))
-
-saveRDS(object = bulk.eset, "bulk.eset3.rds")
-remove(vstexpr_nosex_meso, bulk.eset)
-
-# Version en enlevant pour concordance des noms
-setwd(dir = "/home/anne/Melanie/Projet_4")
-vstexpr_nosex_meso = read.csv("data_vstexpr_nosex_meso.csv", row.names = 1, sep=';', header=TRUE, dec=",")
-
-Namebulk <- row.names(vstexpr_nosex_meso)
 Namebulk2 = Namebulk
 for (i in 1:length(Namebulk)){
   A = Namebulk[i]
@@ -198,15 +110,40 @@ saveRDS(object = bulk.eset, "bulk.eset4.rds")
 remove(vstexpr_nosex_meso2, bulk.eset)
 
 
-setwd(dir = "/home/anne/Melanie/Projet_4")
-hlca = read.csv("Data2/hlca_counts.csv", row.names = 1) # recuperation des donnees single cell
+#### bulk eset Carcinoid
+Namebulk <- row.names(gene_counts_FPKM_LNNEN_carcinoids)
 
-# Mise en place de la conversion
+Namebulk2 = Namebulk
+for (i in 1:length(Namebulk)){
+  A = Namebulk[i]
+  B = unlist(strsplit(A, split = ".", fixed=TRUE))[1]
+  Namebulk2[i]=B
+}
 
+gene_counts_FPKM_LNNEN_carcinoids2 = gene_counts_FPKM_LNNEN_carcinoids
+gene_counts_FPKM_LNNEN_carcinoids2$Namebulk = Namebulk2
+
+Dup =  rev(which(duplicated(Namebulk2)))
+for (i in Dup){
+  gene_counts_FPKM_LNNEN_carcinoids2 <- gene_counts_FPKM_LNNEN_carcinoids2[-i,]
+}
+
+row.names(gene_counts_FPKM_LNNEN_carcinoids2) <- gene_counts_FPKM_LNNEN_carcinoids2$Namebulk
+gene_counts_FPKM_LNNEN_carcinoids2 <- gene_counts_FPKM_LNNEN_carcinoids2[,-240]
+write.csv2(gene_counts_FPKM_LNNEN_carcinoids2,"gene_counts_FPKM_LNNEN_carcinoids2.csv")
+
+bulk.eset<- Biobase::ExpressionSet(assayData = as.matrix(gene_counts_FPKM_LNNEN_carcinoids2))
+saveRDS(object = bulk.eset, "bulk.esetCarci.rds")
+remove(gene_counts_FPKM_LNNEN_carcinoids2, bulk.eset)
+
+
+#### single RNA esest
+hlca = read.csv("Data2/hlca_counts.csv", row.names = 1) # recuperation single cell data
+
+# Conversion gene name
 library(biomaRt)
 mart <- useMart('ENSEMBL_MART_ENSEMBL')
 mart <- useDataset('hsapiens_gene_ensembl', mart)
-
 
 annotLookup <- getBM(
   mart = mart,
@@ -229,18 +166,14 @@ for (i in 1:length(HGCN)){
     HGCN[i] = annotLookup$ensembl_gene_id[Elmt]
     a = a+1}
 }
-# Affiche le nombre de correctement change
-print(a)
 
 hlca$HGCN <- HGCN
 
-#On remet HGCN dans hlca
-#On supprime les duplicats 
+# Supression duplicate 
 Dup =  rev(which(duplicated(HGCN)))
 for (i in Dup){
   hlca <- hlca[-i,]
 }
-
 
 row.names(hlca) <- hlca$HGCN
 hlca <- hlca[,-9410]
@@ -249,9 +182,11 @@ remove(annotLookup, mart, a, Dup, Elmt,HGCN,i)
 
 write.csv2(hlca,"hlca2.csv")
 remove(hlca2,hlca)
+
+
+# Remove not "ENS"
 hlca2 = read.csv("hlca2.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 
-#Enleve ceux pas ens
 namehlca <-rownames(hlca2)
 Ind <- c()
 library(stringr)
@@ -273,6 +208,8 @@ hlca3 <- hlca2[-Ind,]
 write.csv2(hlca3,"hlca3.csv")
 remove(hlca2,A,i,Ind,namehlca,val)
 
+
+# Processing to have same ID
 hlca3 = read.csv("hlca3.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 GeneSc <-row.names(hlca3)
 
@@ -336,6 +273,7 @@ sample.ids <- colnames(hlca4)
 
 remove( Indi,Geni,i,A,R)
 remove(Ind,Gen, Col)
+
 # individual.ids and cell.types should be in the same order as in sample.ids
 sc.pheno <- data.frame(check.names=F, check.rows=F,
                        stringsAsFactors=F,
@@ -362,7 +300,7 @@ sc.eset <- Biobase::ExpressionSet(assayData=as.matrix(hlca4),
                                   phenoData=sc.pdata)
 
 
-#Nettoyage
+# Cleaning
 remove(hlca3,individual.labels, cell.type.labels, sc.pdata, sample.ids)
 saveRDS(object = sc.eset, "sc.eset4.rds")
 remove(hlca4)
@@ -370,17 +308,19 @@ remove( sc.eset)
 
 ######################################################################
 
-## Lancement de MuSiC
+## MuSiC
 library(xbioc)
 library(Biobase)
 library(MuSiC)
 library(BisqueRNA)
+library(cowplot)
+library(reshape2)
 
 setwd(dir = "/home/anne/Melanie/Projet_4")
 bulk.eset <- readRDS(file = "bulk.eset4.rds")
 sc.eset <- readRDS(file = "sc.eset4.rds")
 
-# En parametre on donne ce qui sert a faire la clusterisation et les echantillons, verbose c'est si on veut afficher les resultats
+# En parametre on donne ce qui sert a faire la clusterisation et les echantillons,verbose c'est si on veut afficher les resultats
 Est.prop = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID')
 names(Est.prop)
 
@@ -478,6 +418,29 @@ jitter.fig = Jitter_Est(list(data.matrix(Est.prop7$Est.prop.weighted),
 
 plot_grid(jitter.fig, labels = 'auto')
 
+#############################################################################################
+
+# test Carcinoid
+
+bulk.eset <- readRDS(file = "bulk.esetCarci.rds")
+sc.eset <- readRDS(file = "sc.eset4.rds")
+
+Est.prop = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID')
+names(Est.prop)
+
+saveRDS(object = Est.prop, "Est.propCarci.rds")
+
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop$Est.prop.weighted),
+                             data.matrix(Est.prop$Est.prop.allgene)),
+                        method.name = c('MuSiC','NNLS'), title = 'Jitter plot of Est Proportions')
+
+
+# MuSiC only
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop$Est.prop.weighted)),
+                        method.name = c('MuSiC'), title = 'Jitter plot of Est Proportions')
+
+plot_grid(jitter.fig, labels = 'auto')
+
 #########################################################################################################
 
 ## Annexe de MuSiC
@@ -507,8 +470,6 @@ for (i in Namebulk2){
 }
 
 ## Exemple TUTO MuSiC
-library(cowplot)
-library(reshape2)
 GSE50244.bulk.eset = readRDS("Data2/GSE50244bulkeset.rds")
 EMTAB.eset = readRDS("Data2/EMTABesethealthy.rds")
 
@@ -541,3 +502,24 @@ jitter.new = ggplot(m.prop.GSE50244, aes(Method, Prop)) +
   scale_shape_manual(values = c(21, 24))+ theme_minimal()
 
 plot_grid(jitter.fig, jitter.new, labels = 'auto')
+
+
+## Clusterisation
+
+Mousesub.eset = readRDS('Data2/Mousesubeset.rds')
+Mousesub.basis = music_basis(Mousesub.eset, clusters = 'cellType', samples = 'sampleID')
+
+# Plot the dendrogram of design matrix and cross-subject mean of realtive abundance
+par(mfrow = c(1, 2))
+d <- dist(t(log(Mousesub.basis$Disgn.mtx + 1e-6)), method = "euclidean")
+
+# Hierarchical clustering using Complete Linkage
+hc1 <- hclust(d, method = "complete" )
+# Plot the obtained dendrogram
+plot(hc1, cex = 0.6, hang = -1, main = 'Cluster log(Design Matrix)')
+
+d <- dist(t(log(Mousesub.basis$M.theta + 1e-8)), method = "euclidean")
+# Hierarchical clustering using Complete Linkage
+hc2 <- hclust(d, method = "complete")
+# Plot the obtained dendrogram
+plot(hc2, cex = 0.6, hang = -1, main = 'Cluster log(Mean of RA)')
