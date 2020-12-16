@@ -7,7 +7,10 @@ setwd(dir = "/home/anne/Melanie/Projet_4")
 ## RNASeq Data
 
 ### Mesothelioma
-#We have the raw reads counts for the mesothelioma samples, therefore this matrix must to be normalised. To do so we will use the method developped in DeSeq2. Furthermore, we will remove the genes associated with the sexual chromosomes for this dataset. Doing those two operations the preprocessing steps applied to the mesothelioma data set will be different from those applied to the others samples (LNEN + Carcinoids), for which have the FPKM matrices including the sexual chromosomes (See: the folllowing section).
+# We have the raw reads counts for the mesothelioma samples, therefore this matrix must to be normalised.
+# To do so we will use the method developped in DeSeq2. Furthermore, we will remove the genes associated with the sexual chromosomes for this dataset.
+# Doing those two operations the preprocessing steps applied to the mesothelioma data set will be different from those applied to the others samples (LNEN + Carcinoids),
+# for which have the FPKM matrices including the sexual chromosomes (See: the folllowing section).
 gene_counts_mesothelioma = read.csv('Data/gene_count_matrix_1passMeso.csv',row.names = 1)
 print(gene_counts_mesothelioma[1:3,1:15])
 print(dim(gene_counts_mesothelioma))
@@ -16,38 +19,40 @@ print(dim(gene_counts_mesothelioma))
 expr_annot = read.table("Data/TCGA-3H-AB3K-01A_pass1_gene_abund.tab",header = T,sep = "\t")[,1:6]
 
 # Normalisation of raw reads counts through DeSeq2:
-# creation object deseq2
+# Deseq2 object creation
 deseqexpr = DESeqDataSetFromMatrix(gene_counts_mesothelioma, colData = data.frame(colnames(gene_counts_mesothelioma)), design = ~1, tidy = F)
-# Accroche la matrice annot à notre matrice count
+# Merge information between both gene abundance table and gene count matrix
 annot_ordered = expr_annot[sapply( rownames(deseqexpr), function(x) which(expr_annot$Gene.ID==x)[1] ),]
-# Enleve les chromosomes sexuels et Mitochondrial (garde les differents on a une perte de 10)
+# Removing sexual and Mitochondrial chromosomes
 deseqexpr_nosex = deseqexpr[!annot_ordered$Reference %in% c("chrM","chrX","chrY"),]
 
 vstexpr_nosex = varianceStabilizingTransformation(deseqexpr_nosex,blind = T)
 vstexpr_nosex_meso= assay(vstexpr_nosex) ## Final matrix to work with
 
 ### LNEN
-#Transcriptomic data from LNEN samples are already normalized (FPKM) but the sexual chromosomes should be removed.**
+# Transcriptomic data from LNEN samples are already normalized (FPKM) but the sexual chromosomes should be removed.**
 gene_counts_FPKM_LNEN = read.csv('Data/gene_FPKM_matrix_LnenSamples.csv',row.names = 1)
 print(dim(gene_counts_FPKM_LNEN))
 
 ### Carcinoids
-#As before the normalized are already avaible.
+# As before the normalized are already available.
 gene_counts_FPKM_carcinoids = read.csv('Data/gene_FPKM_matrix_CarcinoidSamples.csv',row.names = 1)
 print(dim(gene_counts_FPKM_carcinoids))
 
-# Combine both datasets
+# Combine both datasets 
 gene_counts_FPKM_LNNEN_carcinoids = cbind(gene_counts_FPKM_LNEN, gene_counts_FPKM_carcinoids)
 
 
 ## Methylation arrays
-# For methylation arrays are only available for the LNENs sample. we propose you to work Wwith the the beta values matrix, nevertheless the M values matrix is also available if needed. Both have already been normalised. Finally these matrices exclude the sexual chromosomes.
+# For methylation arrays are only available for the LNENs sample. we propose you to work Wwith the the beta values matrix,
+# nevertheless the M values matrix is also available if needed. Both have already been normalised.
+# Finally these matrices exclude the sexual chromosomes.
 BetalValNormLNENs <- read.csv('Data/NormalisedFilteredBetaTable_LnenSamples.csv', header = T, row.names = 1)
 print(head(BetalValNormLNENs))
 print(dim(BetalValNormLNENs ))
 
 
-# Sauvegarde des fichiers
+# Saving files
 write.csv2(vstexpr_nosex_meso,"data_vstexpr_nosex_meso.csv")
 write.csv2(gene_counts_FPKM_LNNEN_carcinoids, "data_gene_counts_FPKM_LNNEN_carcinoids.csv")
 
@@ -60,13 +65,13 @@ vstexpr_nosex_meso = read.csv("preprocessing/data_vstexpr_nosex_meso.csv", row.n
 gene_counts_FPKM_LNNEN_carcinoids = read.csv("preprocessing/data_gene_counts_FPKM_LNNEN_carcinoids.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 BetalValNormLNENs <- read.csv('Data/NormalisedFilteredBetaTable_LnenSamples.csv', header = T, row.names = 1)
 
-# Files : vstexpr_nosex_meso, gene_counts_FPKM_LNNEN_carcinoids et BetalValNormLNENs for méthylation
+# Files : vstexpr_nosex_meso, gene_counts_FPKM_LNNEN_carcinoids and BetalValNormLNENs for methylation
 
 
 ################################################################################
 ################################################################################
 
-# Tests of packages
+# Test of packages
 
 
 ## Epidish
@@ -228,7 +233,7 @@ hlca4 = hlca3
 remove(hlca3,GeneSc,GeneSc2,i,A,B)
 hlca4 = read.csv("hlca/hlca4.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 
-# recuperation des genes et des ind
+# Genes and Id storage 
 Col = colnames(hlca4)
 Ind_id <- c()
 Gen_id <- c()
@@ -320,7 +325,7 @@ setwd(dir = "/home/anne/Melanie/Projet_4")
 bulk.eset <- readRDS(file = "bulk.eset4.rds")
 sc.eset <- readRDS(file = "sc.eset4.rds")
 
-# En parametre on donne ce qui sert a faire la clusterisation et les echantillons,verbose c'est si on veut afficher les resultats
+# Parameters used for clustering and sampling. Verbose is for shoing results
 Est.prop = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID')
 names(Est.prop)
 
@@ -340,7 +345,10 @@ jitter.fig = Jitter_Est(list(data.matrix(Est.prop$Est.prop.weighted),
 
 plot_grid(jitter.fig, labels = 'auto')
 
-
+!!!!!!
+## What represent each parts ?
+!!!!!!
+  
 # Part 1
 Est.prop1 = music_prop(bulk.eset, sc.eset, clusters = 'cellType', samples = 'sampleID', 
                        select.ct  = c("B001222","B001224", "B001227" ,"B001235" ,"B001237", "B001239","B002578","B002579"))
@@ -420,7 +428,7 @@ plot_grid(jitter.fig, labels = 'auto')
 
 #############################################################################################
 
-# test Carcinoid
+# Test on Carcinoid data
 
 bulk.eset <- readRDS(file = "bulk.esetCarci.rds")
 sc.eset <- readRDS(file = "sc.eset4.rds")
@@ -464,9 +472,9 @@ plot(hc2, cex = 0.6, hang = -1, main = 'Cluster log(Mean of RA)')
 
 #########################################################################################################
 
-## Annexe de MuSiC
+## Annexe and tutorial of MuSiC
 
-### Verification des concordances des genes
+### Genes concordance verification 
 GeneSc2 = GeneSc
 for (i in 1:length(GeneSc)){
 A = GeneSc[i]
@@ -481,7 +489,7 @@ for (i in 1:length(Namebulk)){
   Namebulk2[i]=B
 }
 
-### Recuperation des genes en commun 
+### Genes in common 
 comp = 0
 for (i in Namebulk2){
   if (is.element(i,GeneSc2)){
@@ -490,7 +498,7 @@ for (i in Namebulk2){
    print(i) 
 }
 
-## Exemple TUTO MuSiC
+## Example for MuSiC tutorial
 GSE50244.bulk.eset = readRDS("Data2/GSE50244bulkeset.rds")
 EMTAB.eset = readRDS("Data2/EMTABesethealthy.rds")
 
