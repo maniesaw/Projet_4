@@ -56,8 +56,8 @@ write.csv2(gene_counts_FPKM_LNNEN_carcinoids, "data_gene_counts_FPKM_LNNEN_carci
 # Data opening
 setwd(dir = "/home/anne/Melanie/Projet_4")
 
-vstexpr_nosex_meso = read.csv("data_vstexpr_nosex_meso.csv", row.names = 1, sep=';', header=TRUE, dec=",")
-gene_counts_FPKM_LNNEN_carcinoids = read.csv("data_gene_counts_FPKM_LNNEN_carcinoids.csv", row.names = 1, sep=';', header=TRUE, dec=",")
+vstexpr_nosex_meso = read.csv("preprocessing/data_vstexpr_nosex_meso.csv", row.names = 1, sep=';', header=TRUE, dec=",")
+gene_counts_FPKM_LNNEN_carcinoids = read.csv("preprocessing/data_gene_counts_FPKM_LNNEN_carcinoids.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 BetalValNormLNENs <- read.csv('Data/NormalisedFilteredBetaTable_LnenSamples.csv', header = T, row.names = 1)
 
 # Files : vstexpr_nosex_meso, gene_counts_FPKM_LNNEN_carcinoids et BetalValNormLNENs for méthylation
@@ -226,7 +226,7 @@ write.csv2(hlca3,"hlca4.csv")
 
 hlca4 = hlca3
 remove(hlca3,GeneSc,GeneSc2,i,A,B)
-hlca4 = read.csv("hlca4.csv", row.names = 1, sep=';', header=TRUE, dec=",")
+hlca4 = read.csv("hlca/hlca4.csv", row.names = 1, sep=';', header=TRUE, dec=",")
 
 # recuperation des genes et des ind
 Col = colnames(hlca4)
@@ -545,3 +545,4 @@ hc2 <- hclust(d, method = "complete")
 # Plot the obtained dendrogram
 plot(hc2, cex = 0.6, hang = -1, main = 'Cluster log(Mean of RA)')
 
+############################################################################################
